@@ -118,18 +118,51 @@ namespace PresentDistributor
                     $"There aren't enough people. Total people: {_People.Count()}");
             }
 
+            _ValidPersons = new List<Person>();
+
             //Add all the people who aren't part of the first group
             _ValidPersons.AddRange(_People.SkipLast(_People.Count() - (int)_Groups[0][0]));
             _ValidPersons.AddRange(_People.Skip((int)_Groups[0][1]));
 
+            List<Person> removedPersons = new List<Person>();
 
+            removedPersons.AddRange(_People.Skip((int)_Groups[0][0]).Take((int)_Groups[0][1] - (int)_Groups[0][0]));
+
+            Random rnd = new Random();
+
+            //iterate over each group except the last one
             for (short groupIteration = 0; groupIteration < _Groups.Count() - 2; groupIteration++)
             {
-                
+                for (short personIteration = _Groups[groupIteration][0]; personIteration < _Groups[groupIteration][1]; personIteration++)
+                {
+                    int assigneeIndex = rnd.Next(_ValidPersons.Count);
+                    _People[personIteration].Assignee = _ValidPersons.ElementAt(assigneeIndex);
+
+                    _ValidPersons.RemoveAt(assigneeIndex);
+                }
+
+                //TODO: Set up validpersons for next group
+                _ValidPersons.InsertRange(PreviousIndexInPeople(_Groups[groupIteration][0]), removedPersons);
+                _ValidPersons.Select(x => )
             }
 
             //TODO: final group secial rules
 
+        }
+
+        private int PreviousIndexInPeople(int personIndex)
+        {
+            while (personIndex != 0)
+            {
+                personIndex--;
+
+                if (_ValidPersons.IndexOf(_People[personIndex]) != -1)
+                {
+                    return _ValidPersons.IndexOf(_People[personIndex]);
+                }
+            }
+
+            return 0;
         }
 
         private void SortGroups()
@@ -137,6 +170,21 @@ namespace PresentDistributor
             //TODO: implement 3 way quick sort
         }
     }
+
+    /*public static class EnumerableExtensions
+    {
+        public static int IndexOf<T>(this IEnumerable<T> source, T value)
+        {
+            int index = 0;
+            var comparer = EqualityComparer<T>.Default; // or pass in as a parameter
+            foreach (T item in source)
+            {
+                if (comparer.Equals(item, value)) return index;
+                index++;
+            }
+            return -1;
+        }
+    }*/
 
     [Serializable()]
     public class NoSolutionPossibleException : Exception
