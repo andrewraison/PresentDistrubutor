@@ -21,6 +21,12 @@ namespace PresentDistributor
             get { return _Assignee; }
         }
 
+        private Person _Giver;
+        public Person Giver
+        {
+            set { _Giver = value; }
+            get { return _Giver; }
+        }
         /*
         private List<Person> _Partners;
         public void AddPartners(List<Person> partnersToAdd)
@@ -137,16 +143,47 @@ namespace PresentDistributor
                 {
                     int assigneeIndex = rnd.Next(_ValidPersons.Count);
                     _People[personIteration].Assignee = _ValidPersons.ElementAt(assigneeIndex);
+                    _ValidPersons.ElementAt(assigneeIndex).Giver = _People[personIteration];
 
                     _ValidPersons.RemoveAt(assigneeIndex);
                 }
 
-                //TODO: Set up validpersons for next group
+                //put the removed persons back into _validPersons, and remove the next group of people
                 _ValidPersons.InsertRange(PreviousIndexInPeople(_Groups[groupIteration][0]), removedPersons);
-                _ValidPersons.Select(x => )
+                removedPersons = _ValidPersons.Where(x => IsPersonInGroup(groupIteration+1, x)).ToList();
             }
 
             //TODO: final group secial rules
+            bool isReassigning = false;
+            for (short personIteration = _Groups[_Groups.Length - 1][0]; personIteration < _Groups[_Groups.Length - 1][1]; personIteration++)
+            {
+                if (_ValidPersons.Count != 0)
+                {
+                    isReassigning = true;
+                    _ValidPersons = _People.SkipLast(_Groups[_Groups.Length - 1][1] - _Groups[_Groups.Length - 1][0]).ToList();
+                }
+                if (!isReassigning)
+                {
+                    int assigneeIndex = rnd.Next(_ValidPersons.Count);
+                    _People[personIteration].Assignee = _ValidPersons.ElementAt(assigneeIndex);
+                    _ValidPersons.ElementAt(assigneeIndex).Giver = _People[personIteration];
+
+                    _ValidPersons.RemoveAt(assigneeIndex);
+                }
+                else
+                {
+                    int assigneeIndex = rnd.Next(_ValidPersons.Count);
+                    Person oldGiver = _ValidPersons.ElementAt(assigneeIndex).Giver;
+                    _People[personIteration].Assignee = _ValidPersons.ElementAt(assigneeIndex);
+                    _ValidPersons.ElementAt(assigneeIndex).Giver = _People[personIteration];
+                    _ValidPersons.RemoveAt(assigneeIndex);
+
+                    assigneeIndex = rnd.Next(removedPersons.Count);
+                    oldGiver.Assignee = removedPersons.ElementAt(assigneeIndex);
+                    removedPersons.ElementAt(assigneeIndex).Giver = oldGiver;
+                    removedPersons.RemoveAt(assigneeIndex);
+                }
+            }
 
         }
 
@@ -163,6 +200,18 @@ namespace PresentDistributor
             }
 
             return 0;
+        }
+
+        private bool IsPersonInGroup(int groupIndex, Person person)
+        {
+            for (short personIndex = _Groups[groupIndex][0]; personIndex <= _Groups[groupIndex][1]; personIndex++)
+            {
+                if (person == _People[personIndex])
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void SortGroups()
