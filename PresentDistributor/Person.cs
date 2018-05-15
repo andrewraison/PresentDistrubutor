@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ExtensionMethods;
 
 
 namespace PresentDistributor
@@ -27,25 +28,6 @@ namespace PresentDistributor
             set { _Giver = value; }
             get { return _Giver; }
         }
-        /*
-        private List<Person> _Partners;
-        public void AddPartners(List<Person> partnersToAdd)
-        {
-            _Partners.AddRange(partnersToAdd);
-        }
-        public void AddPartners(Person partnersToAdd)
-        {
-            _Partners.Add(partnersToAdd);
-        }
-        public List<Person> GetPartners()
-        {
-            return _Partners;
-        }
-        public void ClearPartners()
-        {
-            _Partners = new List<Person>();
-        }*/
-
 
         public Person(string name)
         {
@@ -55,7 +37,9 @@ namespace PresentDistributor
 
     }
 
-    public class RENAMETHIS
+
+
+    public class Assignments
     {
         private Person[] _People;
         public Person[] GetPeople()
@@ -87,7 +71,7 @@ namespace PresentDistributor
             _Groups = revisedGroups.ToArray();
         }
 
-        public RENAMETHIS (List<List<string>> names)
+        public Assignments (List<List<string>> names)
         {
             List<Person> People = new List<Person>();
             List<short[]> Groups= new List<short[]>();
@@ -216,24 +200,37 @@ namespace PresentDistributor
 
         private void SortGroups()
         {
-            //TODO: implement 3 way quick sort
+            int[] keys = new int[_Groups.Length];
+
+            for (int i = 0; i < _Groups.Length; i++)
+            {
+                keys[i] = _Groups[i][1] - _Groups[i][0];
+            }
+
+            //sort keys
+            ThreeWayQuickSort.QuickSort(ref keys, 0, 0);
+
+            short[][] tmpGroup = new short[_Groups.Length][2];
+
+            //use keys to sort groups
+            for (int i = 0; i < _Groups.Length; i++)
+            {
+                for (int j = 0; j < keys.Length; j++)
+                {
+                    if (keys[j] == _Groups[i][1] - _Groups[i][0])
+                    {
+                        tmpGroup[j][0] = _Groups[i][0];
+                        tmpGroup[j][1] = _Groups[i][1];
+                        keys[j] = -1;
+                        break;
+                    }
+                }
+            }
+
+            _Groups = tmpGroup;
         }
     }
 
-    /*public static class EnumerableExtensions
-    {
-        public static int IndexOf<T>(this IEnumerable<T> source, T value)
-        {
-            int index = 0;
-            var comparer = EqualityComparer<T>.Default; // or pass in as a parameter
-            foreach (T item in source)
-            {
-                if (comparer.Equals(item, value)) return index;
-                index++;
-            }
-            return -1;
-        }
-    }*/
 
     [Serializable()]
     public class NoSolutionPossibleException : Exception
